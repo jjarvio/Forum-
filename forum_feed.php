@@ -143,15 +143,18 @@ function tubetus_forum_latest_topics() {
     }
 
     .content a {
-        display: block;
+        display: -webkit-box;
+        -webkit-line-clamp: 3; /* Kuinka monta riviä näytetään maksimissaan */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        
         width: 100%;
         font-weight: bold;
         color: #0073ff;
         text-decoration: none;
-        white-space: normal;
-        word-break: break-word;
-        overflow-wrap: anywhere;
         line-height: 1.4;
+        word-break: break-word;
     }
 
     .content a:hover {
