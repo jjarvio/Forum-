@@ -1,42 +1,44 @@
 <?php
 /*
 Plugin Name: Tubetus Forum Feed
-Description: Näyttää phpBB viimeisimmät keskustelut
-Version: 2.2
+Description: Näyttää phpBB viimeisimmät keskustelut turvallisesti
+Version: 2.3
 */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) exit; // Estää suoran suorituksen
 
 function tubetus_forum_latest_topics() {
 
     // ⚙️ ASETUKSET
-    $db_host = '127.0.0.1';
-    $db_name = 'jonitiet_phpbb';
-    $db_user = 'jonitiet_forum';
-    $db_pass = 'Tietokettu2020';
-
     $forum_url = 'https://keskustelu.moikka11.fi';
     $table_prefix = 'phpbbfp_';
 
-    // ⚡ CACHE
+    // ⚡ CACHE (60 sekuntia)
     $cache_key = 'tubetus_forum_cache';
     $cached = get_transient($cache_key);
     if ($cached) return $cached;
 
-    $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name);
-    
-    $mysqli->set_charset("utf8mb4");
-    
-
-    if ($mysqli->connect_error) {
-        return "DB virhe: " . $mysqli->connect_error;
+    // Varmistetaan, että tunnukset on määritelty wp-config.php:ssä
+    if (!defined('TUBETUS_DB_USER') || !defined('TUBETUS_DB_PASS')) {
+        return "";
     }
 
-    // 🔥 VARMA QUERY (käyttää post_subjectia)
-    $result = $mysqli->query("
+    // Yhdistetään tietokantaan turvallisesti WordPressin wpdb-luokalla
+    $forum_db = new wpdb(TUBETUS_DB_USER, TUBETUS_DB_PASS, TUBETUS_DB_NAME, TUBETUS_DB_HOST);
+
+    // Tarkistetaan onko yhteysvirheitä 
+    if (!empty($forum_db->error)) {
+        return "";
+    }
+
+    // Pakotetaan UTF-8 tila oikeiden merkkien (esim. ääkkösten) näyttämiseksi
+    $forum_db->query("SET NAMES 'utf8mb4'");
+
+    // 🔥 TURVALLINEN QUERY
+    $query = "
         SELECT 
             t.topic_id,
-            t.topic_title, -- Haetaan suoraan ketjun otsikko
+            t.topic_title,
             t.topic_time,
             u.username,
             u.user_avatar
@@ -45,14 +47,14 @@ function tubetus_forum_latest_topics() {
         WHERE t.topic_visibility = 1
         ORDER BY t.topic_time DESC
         LIMIT 10
-    ");
+    ";
 
-    if (!$result) {
-        return "Query error: " . $mysqli->error;
-    }
+    // Haetaan tulokset assosiatiivisena taulukkona (ARRAY_A)
+    $topics = $forum_db->get_results($query, ARRAY_A);
 
-    if ($result->num_rows == 0) {
-        return "Ei keskusteluja löytynyt";
+    // Tarkistetaan löytyikö keskusteluja
+    if (empty($topics)) {
+        return "<p>Ei uusia keskusteluja.</p>";
     }
 
     ob_start();
@@ -61,18 +63,17 @@ function tubetus_forum_latest_topics() {
     <div class="forum-box">
         <h3>Forum keskustelut</h3>
 
-        <?php while ($topic = $result->fetch_assoc()): ?>
+        <?php foreach ($topics as $topic): ?>
             <div class="forum-item">
 
-                <!-- 👤 AVATAR -->
                 <div class="avatar">
                     <?php if (!empty($topic['user_avatar'])): ?>
-                        <img src="<?php echo $forum_url; ?>/images/avatars/upload/<?php echo esc_attr($topic['user_avatar']); ?>" alt="">
+                        <img src="<?php echo esc_url($forum_url . '/images/avatars/upload/' . $topic['user_avatar']); ?>" alt="">
                     <?php endif; ?>
                 </div>
 
                 <div class="content">
-                    <a href="<?php echo $forum_url; ?>/viewtopic.php?t=<?php echo $topic['topic_id']; ?>">
+                    <a href="<?php echo esc_url($forum_url . '/viewtopic.php?t=' . $topic['topic_id']); ?>">
                         <?php echo esc_html($topic['topic_title'] ?: 'Ei otsikkoa'); ?>
                     </a>
 
@@ -87,7 +88,7 @@ function tubetus_forum_latest_topics() {
                 </div>
 
             </div>
-        <?php endwhile; ?>
+        <?php endforeach; ?>
     </div>
 
     <style>
@@ -105,8 +106,8 @@ function tubetus_forum_latest_topics() {
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        padding: 15px 10px; /* Lisätty pystysuuntaista tilaa (15px) */
-        border-bottom: 2px solid #ddd; /* Paksumpi ja yhtenäinen viiva */
+        padding: 15px 10px;
+        border-bottom: 2px solid #ddd;
         transition: 0.2s;
     }
 
