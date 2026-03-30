@@ -1,6 +1,6 @@
 <?php 
 /* Plugin Name: Tubetus Forum Feed 
-Description: Versio 3.8: Kaikki kentät palautettu + kohdan 3 tekstikentille lisätty omat värivalitsimet. 
+Description: Versio 1.0: Kaikki kentät palautettu + kohdan 3 tekstikentille lisätty omat värivalitsimet. 
 Version: 1.0
 Author: Tietokettu
 */ 
