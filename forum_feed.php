@@ -1,7 +1,8 @@
 <?php 
 /* Plugin Name: Tubetus Forum Feed 
 Description: Versio 3.8: Kaikki kentät palautettu + kohdan 3 tekstikentille lisätty omat värivalitsimet. 
-Version: 3.8
+Version: 1.0
+Author: Tietokettu
 */ 
 
 if (!defined('ABSPATH')) exit; 
