@@ -2,6 +2,7 @@
 /* Plugin Name: Tubetus Forum Feed 
 Description: Näyttää viimeisimmät keskustelut phpBB-foorumiltasi. Yksinkertainen, nopea ja muokattavissa.
 Version: 1.1
+Author: Tietokettu
 */ 
 
 if (!defined('ABSPATH')) exit; 
