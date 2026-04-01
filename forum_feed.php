@@ -1,7 +1,7 @@
 <?php 
 /* Plugin Name: Tubetus Forum Feed 
 Description: Kaikki ominaisuudet: Välit, koot, varjot, reunukset ja automaattinen poistettujen viestien suodatus.
-Version: 1.5
+Version: 1.3
 Author: Tietokettu
 */ 
 
@@ -51,7 +51,7 @@ function tubetus_forum_options_page() {
     if (isset($_GET['settings-updated'])) delete_transient('tubetus_forum_cache'); 
     ?> 
     <div class="wrap"> 
-        <h1>Tubetus Forum - Asetukset v1.5</h1> 
+        <h1>Tubetus Forum - Asetukset v1.3</h1> 
         <form action="options.php" method="post"> 
             <?php settings_fields('tubetus_forum_settings_group'); ?> 
              
