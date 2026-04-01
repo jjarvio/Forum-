@@ -1,7 +1,7 @@
 <?php 
 /* Plugin Name: Tubetus Forum Feed 
 Description: Näyttää viimeisimmät keskustelut phpBB-foorumiltasi. Yksinkertainen, nopea ja muokattavissa.
-Version: 1.1
+Version: 1.2
 Author: Tietokettu
 */ 
 
@@ -45,12 +45,12 @@ add_action('admin_menu', function() {
     add_options_page('Tubetus Forum Asetukset', 'Tubetus Forum', 'manage_options', 'tubetus_forum', 'tubetus_forum_options_page'); 
 }); 
 
-// 3. HALLINTAPANEELI (Kaikki kohdat palautettu ja tasattu)
+// 3. HALLINTAPANEELI
 function tubetus_forum_options_page() { 
     if (isset($_GET['settings-updated'])) delete_transient('tubetus_forum_cache'); 
     ?> 
     <div class="wrap"> 
-        <h1>Tubetus Forum - Asetukset v1.1</h1> 
+        <h1>Tubetus Forum - Asetukset v1.2</h1> 
         <form action="options.php" method="post"> 
             <?php settings_fields('tubetus_forum_settings_group'); ?> 
              
@@ -77,7 +77,7 @@ function tubetus_forum_options_page() {
                 <tr><th>Alamarginaali (px)</th><td><input type="number" name="tubetus_title_margin_bottom" value="<?php echo absint(get_option('tubetus_title_margin_bottom', 20)); ?>" class="small-text" /> px</td></tr>
             </table> 
 
-            <h3>3. Reunukset & Varjot (Värivalitsimet tasattu)</h3>
+            <h3>3. Reunukset & Varjot</h3>
             <table class="form-table">
                 <tr><th>Ulompi reuna</th><td><input type="text" name="tubetus_outer_border" value="<?php echo esc_attr(get_option('tubetus_outer_border', 'none')); ?>" class="tubetus-input-fixed" /> <input type="text" name="tubetus_outer_border_clr" value="<?php echo esc_attr(get_option('tubetus_outer_border_clr', '#e2e8f0')); ?>" class="color-field" /></td></tr>
                 <tr><th>Ulompi varjo</th><td><input type="text" name="tubetus_outer_shadow" value="<?php echo esc_attr(get_option('tubetus_outer_shadow', 'none')); ?>" class="tubetus-input-fixed" /> <input type="text" name="tubetus_outer_shadow_clr" value="<?php echo esc_attr(get_option('tubetus_outer_shadow_clr', 'rgba(0,0,0,0.05)')); ?>" class="color-field" /></td></tr>
@@ -117,7 +117,6 @@ function tubetus_forum_render_output() {
     $forum_url = rtrim(get_option('tubetus_forum_url'), '/'); 
     $limit = absint(get_option('tubetus_topic_limit', 10)); 
 
-    // Kysely joka hakee viimeisimmät vastaukset/viestit
     $query = "SELECT t.topic_id, t.topic_title, t.topic_last_post_time as topic_time, u.username, u.user_avatar, u.user_avatar_type 
               FROM {$table_prefix}topics t 
               LEFT JOIN {$table_prefix}users u ON t.topic_last_poster_id = u.user_id 
@@ -141,17 +140,22 @@ function tubetus_forum_render_output() {
     <style> 
         .forum-outer-container { 
             font-family: <?php echo esc_attr(get_option('tubetus_font_family', 'inherit')); ?>; 
-            margin: 20px 0; box-sizing: border-box; padding: 24px;
+            margin: 20px 0; box-sizing: border-box; 
+            padding: 0 24px 24px 24px; /* KORJATTU: Poistettu yläosan kiinteä 24px padding */
             background-color: <?php echo esc_attr(get_option('tubetus_outer_bg', '#f8fafc')); ?>;
             border-radius: <?php echo $b_radius; ?>px;
             border: <?php echo esc_attr($outer_border); ?> !important;
             box-shadow: <?php echo esc_attr($outer_shadow); ?> !important;
+            overflow: hidden; /* Estää marginaalien "karkaamisen" laatikon ulkopuolelle */
         } 
         .forum-main-title { 
-            font-size: 20px; font-weight: 800; color: #000; letter-spacing: -0.5px; margin: 0 !important;
+            font-size: 20px; font-weight: 800; color: #000; letter-spacing: -0.5px; 
+            margin: 0 !important; 
+            padding: 0 !important; /* Pakotetaan WP-teemojen omat näkymättömät välit pois */
+            line-height: 1.2 !important; /* Estää teemaa asettamasta otsikolle ylisuurta korkeutta */
             text-align: <?php echo esc_attr(get_option('tubetus_title_align', 'center')); ?>; 
-            margin-top: <?php echo absint(get_option('tubetus_title_margin_top', 0)); ?>px !important;
-            margin-bottom: <?php echo absint(get_option('tubetus_title_margin_bottom', 20)); ?>px !important;
+            padding-top: <?php echo absint(get_option('tubetus_title_margin_top', 0)); ?>px !important;
+            padding-bottom: <?php echo absint(get_option('tubetus_title_margin_bottom', 20)); ?>px !important;
         } 
         .forum-inner-box {  
             background: <?php echo esc_attr(get_option('tubetus_inner_bg', '#ffffff')); ?>;  
