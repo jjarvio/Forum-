@@ -1,7 +1,7 @@
 <?php 
 /* Plugin Name: Tubetus Forum Feed 
-Description: Näyttää viimeisimmät keskustelut phpBB-foorumiltasi. Yksinkertainen, nopea ja muokattavissa.
-Version: 1.2
+Description: Kaikki ominaisuudet: Välit, koot, varjot, reunukset ja automaattinen poistettujen viestien suodatus.
+Version: 1.5
 Author: Tietokettu
 */ 
 
@@ -20,7 +20,7 @@ add_action('admin_enqueue_scripts', function($hook) {
             <style>
                 .tubetus-input-fixed { width: 150px !important; margin-right: 10px; }
                 .iris-picker { z-index: 100; }
-                .form-table th { width: 200px; }
+                .form-table th { width: 220px; }
             </style>
             <?php 
         }); 
@@ -36,7 +36,8 @@ add_action('admin_init', function() {
         'tubetus_author_color', 'tubetus_font_family', 'tubetus_border_radius', 'tubetus_title_align', 
         'tubetus_outer_border', 'tubetus_outer_shadow', 'tubetus_inner_border', 'tubetus_inner_shadow',
         'tubetus_outer_border_clr', 'tubetus_outer_shadow_clr', 'tubetus_inner_border_clr', 'tubetus_inner_shadow_clr',
-        'tubetus_title_margin_top', 'tubetus_title_margin_bottom'
+        'tubetus_title_margin_top', 'tubetus_title_margin_bottom', 'tubetus_outer_width',
+        'tubetus_inner_padding_x', 'tubetus_inner_padding_y'
     ]; 
     foreach ($settings as $setting) register_setting('tubetus_forum_settings_group', $setting); 
 }); 
@@ -50,7 +51,7 @@ function tubetus_forum_options_page() {
     if (isset($_GET['settings-updated'])) delete_transient('tubetus_forum_cache'); 
     ?> 
     <div class="wrap"> 
-        <h1>Tubetus Forum - Asetukset v1.2</h1> 
+        <h1>Tubetus Forum - Asetukset v1.5</h1> 
         <form action="options.php" method="post"> 
             <?php settings_fields('tubetus_forum_settings_group'); ?> 
              
@@ -73,11 +74,18 @@ function tubetus_forum_options_page() {
                         <option value="right" <?php selected(get_option('tubetus_title_align'), 'right'); ?>>Oikea</option>
                     </select>
                 </td></tr>
-                <tr><th>Ylämarginaali (px)</th><td><input type="number" name="tubetus_title_margin_top" value="<?php echo absint(get_option('tubetus_title_margin_top', 0)); ?>" class="small-text" /> px</td></tr>
-                <tr><th>Alamarginaali (px)</th><td><input type="number" name="tubetus_title_margin_bottom" value="<?php echo absint(get_option('tubetus_title_margin_bottom', 20)); ?>" class="small-text" /> px</td></tr>
+                <tr><th>Otsikon yläväli (px)</th><td><input type="number" name="tubetus_title_margin_top" value="<?php echo absint(get_option('tubetus_title_margin_top', 0)); ?>" class="small-text" /> px</td></tr>
+                <tr><th>Otsikon alaväli (px)</th><td><input type="number" name="tubetus_title_margin_bottom" value="<?php echo absint(get_option('tubetus_title_margin_bottom', 20)); ?>" class="small-text" /> px</td></tr>
             </table> 
 
-            <h3>3. Reunukset & Varjot</h3>
+            <h3>3. Koko & Laatikoiden välit (Padding)</h3>
+            <table class="form-table">
+                <tr><th>Koko leveys (max-width)</th><td><input type="text" name="tubetus_outer_width" value="<?php echo esc_attr(get_option('tubetus_outer_width', '100%')); ?>" class="regular-text" /></td></tr>
+                <tr><th>Valkoisen laatikon sivuväli (px)</th><td><input type="number" name="tubetus_inner_padding_x" value="<?php echo absint(get_option('tubetus_inner_padding_x', 24)); ?>" class="small-text" /> px</td></tr>
+                <tr><th>Valkoisen laatikon alaväli (px)</th><td><input type="number" name="tubetus_inner_padding_y" value="<?php echo absint(get_option('tubetus_inner_padding_y', 24)); ?>" class="small-text" /> px</td></tr>
+            </table>
+
+            <h3>4. Reunukset & Varjot</h3>
             <table class="form-table">
                 <tr><th>Ulompi reuna</th><td><input type="text" name="tubetus_outer_border" value="<?php echo esc_attr(get_option('tubetus_outer_border', 'none')); ?>" class="tubetus-input-fixed" /> <input type="text" name="tubetus_outer_border_clr" value="<?php echo esc_attr(get_option('tubetus_outer_border_clr', '#e2e8f0')); ?>" class="color-field" /></td></tr>
                 <tr><th>Ulompi varjo</th><td><input type="text" name="tubetus_outer_shadow" value="<?php echo esc_attr(get_option('tubetus_outer_shadow', 'none')); ?>" class="tubetus-input-fixed" /> <input type="text" name="tubetus_outer_shadow_clr" value="<?php echo esc_attr(get_option('tubetus_outer_shadow_clr', 'rgba(0,0,0,0.05)')); ?>" class="color-field" /></td></tr>
@@ -85,7 +93,7 @@ function tubetus_forum_options_page() {
                 <tr><th>Sisempi varjo</th><td><input type="text" name="tubetus_inner_shadow" value="<?php echo esc_attr(get_option('tubetus_inner_shadow', 'none')); ?>" class="tubetus-input-fixed" /> <input type="text" name="tubetus_inner_shadow_clr" value="<?php echo esc_attr(get_option('tubetus_inner_shadow_clr', 'rgba(0,0,0,0.02)')); ?>" class="color-field" /></td></tr>
             </table>
 
-            <h3>4. Värit & Muut asetukset</h3> 
+            <h3>5. Värit & Muut</h3> 
             <table class="form-table"> 
                 <tr><th>Foorumin URL</th><td><input type="url" name="tubetus_forum_url" value="<?php echo esc_url(get_option('tubetus_forum_url')); ?>" class="regular-text" /></td></tr> 
                 <tr><th>Viestien määrä</th><td><input type="number" name="tubetus_topic_limit" value="<?php echo absint(get_option('tubetus_topic_limit', 10)); ?>" class="small-text" /> kpl</td></tr> 
@@ -117,6 +125,7 @@ function tubetus_forum_render_output() {
     $forum_url = rtrim(get_option('tubetus_forum_url'), '/'); 
     $limit = absint(get_option('tubetus_topic_limit', 10)); 
 
+    // Automaattinen suodatus: topic_moved_id = 0 (ei varjoja) ja topic_visibility = 1 (ei poistettuja)
     $query = "SELECT t.topic_id, t.topic_title, t.topic_last_post_time as topic_time, u.username, u.user_avatar, u.user_avatar_type 
               FROM {$table_prefix}topics t 
               LEFT JOIN {$table_prefix}users u ON t.topic_last_poster_id = u.user_id 
@@ -124,12 +133,13 @@ function tubetus_forum_render_output() {
               ORDER BY t.topic_last_post_time DESC LIMIT {$limit}";
 
     $result = $mysqli->query($query);
-    if (!$result || $result->num_rows == 0) {
-        $mysqli->close();
-        return ""; 
-    }
+    if (!$result || $result->num_rows == 0) { $mysqli->close(); return ""; }
 
+    // Haetaan asetukset muuttujiin
     $b_radius = absint(get_option('tubetus_border_radius', 24));
+    $pad_x = absint(get_option('tubetus_inner_padding_x', 24));
+    $pad_y = absint(get_option('tubetus_inner_padding_y', 24));
+    
     $outer_border = get_option('tubetus_outer_border', 'none') . ' ' . get_option('tubetus_outer_border_clr', '#e2e8f0');
     $outer_shadow = get_option('tubetus_outer_shadow', 'none') . ' ' . get_option('tubetus_outer_shadow_clr', 'rgba(0,0,0,0.05)');
     $inner_border = get_option('tubetus_inner_border', '1px solid') . ' ' . get_option('tubetus_inner_border_clr', '#e2e8f0');
@@ -140,19 +150,19 @@ function tubetus_forum_render_output() {
     <style> 
         .forum-outer-container { 
             font-family: <?php echo esc_attr(get_option('tubetus_font_family', 'inherit')); ?>; 
-            margin: 20px 0; box-sizing: border-box; 
-            padding: 0 24px 24px 24px; /* KORJATTU: Poistettu yläosan kiinteä 24px padding */
+            box-sizing: border-box; 
+            padding: 0 <?php echo $pad_x; ?>px <?php echo $pad_y; ?>px <?php echo $pad_x; ?>px;
             background-color: <?php echo esc_attr(get_option('tubetus_outer_bg', '#f8fafc')); ?>;
             border-radius: <?php echo $b_radius; ?>px;
             border: <?php echo esc_attr($outer_border); ?> !important;
             box-shadow: <?php echo esc_attr($outer_shadow); ?> !important;
-            overflow: hidden; /* Estää marginaalien "karkaamisen" laatikon ulkopuolelle */
+            max-width: <?php echo esc_attr(get_option('tubetus_outer_width', '100%')); ?>;
+            margin: 20px auto !important;
+            overflow: hidden;
         } 
         .forum-main-title { 
             font-size: 20px; font-weight: 800; color: #000; letter-spacing: -0.5px; 
-            margin: 0 !important; 
-            padding: 0 !important; /* Pakotetaan WP-teemojen omat näkymättömät välit pois */
-            line-height: 1.2 !important; /* Estää teemaa asettamasta otsikolle ylisuurta korkeutta */
+            margin: 0 !important; padding: 0 !important; line-height: 1.2 !important; 
             text-align: <?php echo esc_attr(get_option('tubetus_title_align', 'center')); ?>; 
             padding-top: <?php echo absint(get_option('tubetus_title_margin_top', 0)); ?>px !important;
             padding-bottom: <?php echo absint(get_option('tubetus_title_margin_bottom', 20)); ?>px !important;
@@ -205,6 +215,8 @@ function tubetus_forum_render_output() {
 } 
 
 add_shortcode('forum_latest', 'tubetus_forum_render_output');
+
+// WIDGET TUKI
 class Tubetus_Forum_Widget extends WP_Widget { 
     function __construct() { parent::__construct('tubetus_forum_widget', 'Tubetus Forum Feed'); } 
     public function widget($args, $instance) { echo $args['before_widget'] . tubetus_forum_render_output() . $args['after_widget']; } 
