@@ -1,7 +1,7 @@
 <?php 
 /* Plugin Name: Tubetus Forum Feed 
-Description: Kaikki ominaisuudet: Välit, koot, varjot, reunukset ja automaattinen poistettujen viestien suodatus.
-Version: 1.3
+Description: Kaikki ominaisuudet: Välit, koot, varjot, reunukset, automaattinen suodatus sekä otsikon typografian (fontti, koko, paksuus, väri) hallinta.
+Version: 1.4
 Author: Tietokettu
 */ 
 
@@ -37,7 +37,8 @@ add_action('admin_init', function() {
         'tubetus_outer_border', 'tubetus_outer_shadow', 'tubetus_inner_border', 'tubetus_inner_shadow',
         'tubetus_outer_border_clr', 'tubetus_outer_shadow_clr', 'tubetus_inner_border_clr', 'tubetus_inner_shadow_clr',
         'tubetus_title_margin_top', 'tubetus_title_margin_bottom', 'tubetus_outer_width',
-        'tubetus_inner_padding_x', 'tubetus_inner_padding_y'
+        'tubetus_inner_padding_x', 'tubetus_inner_padding_y',
+        'tubetus_title_font_family', 'tubetus_title_font_size', 'tubetus_title_font_weight', 'tubetus_title_color'
     ]; 
     foreach ($settings as $setting) register_setting('tubetus_forum_settings_group', $setting); 
 }); 
@@ -51,7 +52,7 @@ function tubetus_forum_options_page() {
     if (isset($_GET['settings-updated'])) delete_transient('tubetus_forum_cache'); 
     ?> 
     <div class="wrap"> 
-        <h1>Tubetus Forum - Asetukset v1.3</h1> 
+        <h1>Tubetus Forum - Asetukset v1.4</h1> 
         <form action="options.php" method="post"> 
             <?php settings_fields('tubetus_forum_settings_group'); ?> 
              
@@ -67,6 +68,20 @@ function tubetus_forum_options_page() {
             <h3>2. Otsikon Tyyli & Välit</h3> 
             <table class="form-table"> 
                 <tr><th>Boksin otsikko</th><td><input type="text" name="tubetus_box_title" value="<?php echo esc_attr(get_option('tubetus_box_title', 'Forum keskustelut')); ?>" class="regular-text" /></td></tr> 
+                <tr><th>Otsikon väri</th><td><input type="text" name="tubetus_title_color" value="<?php echo esc_attr(get_option('tubetus_title_color', '#000000')); ?>" class="color-field" /></td></tr>
+                <tr><th>Otsikon fontti (CSS)</th><td><input type="text" name="tubetus_title_font_family" value="<?php echo esc_attr(get_option('tubetus_title_font_family', 'inherit')); ?>" class="regular-text" placeholder="Esim. Arial, sans-serif" /></td></tr>
+                <tr><th>Otsikon koko (px)</th><td><input type="number" name="tubetus_title_font_size" value="<?php echo absint(get_option('tubetus_title_font_size', 20)); ?>" class="small-text" /> px</td></tr>
+                <tr><th>Otsikon paksuus</th><td>
+                    <select name="tubetus_title_font_weight">
+                        <?php 
+                        $weights = ['normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+                        $current_weight = get_option('tubetus_title_font_weight', '800');
+                        foreach($weights as $w) {
+                            echo '<option value="' . $w . '" ' . selected($current_weight, $w, false) . '>' . $w . '</option>';
+                        }
+                        ?>
+                    </select>
+                </td></tr>
                 <tr><th>Otsikon tasaus</th><td>
                     <select name="tubetus_title_align">
                         <option value="left" <?php selected(get_option('tubetus_title_align', 'left'), 'left'); ?>>Vasen</option>
@@ -97,7 +112,7 @@ function tubetus_forum_options_page() {
             <table class="form-table"> 
                 <tr><th>Foorumin URL</th><td><input type="url" name="tubetus_forum_url" value="<?php echo esc_url(get_option('tubetus_forum_url')); ?>" class="regular-text" /></td></tr> 
                 <tr><th>Viestien määrä</th><td><input type="number" name="tubetus_topic_limit" value="<?php echo absint(get_option('tubetus_topic_limit', 10)); ?>" class="small-text" /> kpl</td></tr> 
-                <tr><th>Fontti (CSS)</th><td><input type="text" name="tubetus_font_family" value="<?php echo esc_attr(get_option('tubetus_font_family', 'inherit')); ?>" class="regular-text" /></td></tr>
+                <tr><th>Koko elementin fontti (CSS)</th><td><input type="text" name="tubetus_font_family" value="<?php echo esc_attr(get_option('tubetus_font_family', 'inherit')); ?>" class="regular-text" /></td></tr>
                 <tr><th>Kulmien pyöristys</th><td><input type="number" name="tubetus_border_radius" value="<?php echo absint(get_option('tubetus_border_radius', 24)); ?>" class="small-text" /> px</td></tr>
                 <tr><th>Ulompi taustaväri</th><td><input type="text" name="tubetus_outer_bg" value="<?php echo esc_attr(get_option('tubetus_outer_bg', '#f8fafc')); ?>" class="color-field" /></td></tr> 
                 <tr><th>Sisempi taustaväri</th><td><input type="text" name="tubetus_inner_bg" value="<?php echo esc_attr(get_option('tubetus_inner_bg', '#ffffff')); ?>" class="color-field" /></td></tr> 
@@ -161,7 +176,11 @@ function tubetus_forum_render_output() {
             overflow: hidden;
         } 
         .forum-main-title { 
-            font-size: 20px; font-weight: 800; color: #000; letter-spacing: -0.5px; 
+            font-family: <?php echo esc_attr(get_option('tubetus_title_font_family', 'inherit')); ?>;
+            font-size: <?php echo absint(get_option('tubetus_title_font_size', 20)); ?>px; 
+            font-weight: <?php echo esc_attr(get_option('tubetus_title_font_weight', '800')); ?>; 
+            color: <?php echo esc_attr(get_option('tubetus_title_color', '#000000')); ?>; 
+            letter-spacing: -0.5px; 
             margin: 0 !important; padding: 0 !important; line-height: 1.2 !important; 
             text-align: <?php echo esc_attr(get_option('tubetus_title_align', 'center')); ?>; 
             padding-top: <?php echo absint(get_option('tubetus_title_margin_top', 0)); ?>px !important;
